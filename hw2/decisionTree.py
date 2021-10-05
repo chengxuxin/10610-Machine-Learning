@@ -72,7 +72,7 @@ class Node():
 
 
 class DecisionTree():
-    def __init__(self, data) -> None:  # data include 1 row of header
+    def __init__(self, data, max_depth) -> None:  # data include 1 row of header
         self.max_depth = max_depth
         self.num_attrs = data.shape[1] - 1  # -1 for output category
         self.header = data[0]
@@ -153,16 +153,16 @@ def write(labels, filename):
             f_out.write(line)
             f_out.write('\n')
 
-def save(tree, data, filename):
+def save(tree, data, filename, if_write=True):
     labels = []
     true_labels = data[1:, -1]
     for datapt in data[1:, :-1]:
         label = tree.predict(datapt)
         labels.append(label)
-    write(labels, filename)
+    if if_write:
+        write(labels, filename) 
     error = np.mean(labels != true_labels)
     return error
-    
 
 if __name__ == "__main__":
     # binary classifier, all attributes and class only have 2 values.
@@ -173,23 +173,24 @@ if __name__ == "__main__":
     test_out = sys.argv[5]
     metrics_out = sys.argv[6]
 
-    # train_in = "./handout/small_train.tsv"
-    # test_in = "./handout/small_test.tsv"
-    # max_depth = 3
-    # train_out = "./train_out.labels"
-    # test_out = "./test_out.labels"
-    # metrics_out = "./metrics_out.txt"
+    # train_in = "./handout/mushroom_train.tsv"
+    # test_in = "./handout/mushroom_test.tsv"
+    # max_depth = 2
+    # train_out = "./output/train_out.labels"
+    # test_out = "./output/test_out.labels"
+    # metrics_out = "./output/metrics_out.txt"
     
     train_data = read(train_in)
     test_data = read(test_in)
     unique_cat, cat_counts = np.unique(train_data[1:, -1], return_counts=True)
     print("[{}: {} / {}: {}]".format(unique_cat[0], cat_counts[0], unique_cat[1], cat_counts[1]))
     
-    tree = DecisionTree(train_data)
+    tree = DecisionTree(train_data, max_depth)
     tree.train(tree.root)
 
     error_train = save(tree, train_data, train_out)
     error_test = save(tree, test_data, test_out)
+    print(error_train, error_test)
     with open(metrics_out, 'w') as f:
         f.write("error(train): {}\nerror(test): {}".format(error_train, error_test))
 
